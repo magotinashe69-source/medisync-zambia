@@ -1,0 +1,123 @@
+import re
+from datetime import date, datetime
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+
+
+# ----- User -----
+
+class UserBase(BaseModel):
+    email: EmailStr
+    full_name: str
+    role: str
+    hpcz_number: str | None = None
+    facility_name: str
+
+
+class UserCreate(UserBase):
+    password: str = Field(min_length=8)
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserResponse(UserBase):
+    id: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ----- Token -----
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+# ----- Patient -----
+
+NRC_PATTERN = re.compile(r"^\d{6}/\d{2}/\d$")
+PHONE_PATTERN = re.compile(r"^(\+260|0)\d{9}$")
+
+
+class PatientBase(BaseModel):
+    nrc: str
+    full_name: str
+    phone: str
+    date_of_birth: date
+    gender: str
+    allergies: str | None = None
+
+
+class PatientCreate(PatientBase):
+    @field_validator("nrc")
+    @classmethod
+    def validate_nrc(cls, v: str) -> str:
+        if not NRC_PATTERN.match(v):
+            raise ValueError("NRC must be in format ######/##/# (e.g. 123456/78/1)")
+        return v
+
+    @field_validator("phone")
+    @classmethod
+    def validate_phone(cls, v: str) -> str:
+        if not PHONE_PATTERN.match(v):
+            raise ValueError("Phone must start with +260 or 0 followed by 9 digits")
+        return v
+
+
+class PatientResponse(PatientBase):
+    id: str
+    created_by: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ----- Prescription (defined before VisitResponse uses it) -----
+
+class PrescriptionBase(BaseModel):
+    medication_name: str
+    dosage: str
+    frequency: str
+    duration: str
+    instructions: str | None = None
+
+
+class PrescriptionCreate(PrescriptionBase):
+    pass
+
+
+class PrescriptionResponse(PrescriptionBase):
+    id: str
+    visit_id: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ----- Visit -----
+
+class VisitBase(BaseModel):
+    vitals_bp: str | None = None
+    vitals_temp: float | None = None
+    vitals_weight: float | None = None
+    diagnosis: str
+    notes: str | None = None
+
+
+class VisitCreate(VisitBase):
+    pass
+
+
+class VisitResponse(VisitBase):
+    id: str
+    patient_id: str
+    doctor_id: str
+    created_at: datetime
+    prescriptions: list[PrescriptionResponse] = []
+
+    model_config = ConfigDict(from_attributes=True)
