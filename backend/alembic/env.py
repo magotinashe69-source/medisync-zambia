@@ -24,9 +24,16 @@ config = context.config
 database_url = os.getenv("DATABASE_URL")
 if not database_url:
     raise RuntimeError("DATABASE_URL is not set. Check backend/.env")
+=======
 # Rewrite to use psycopg (v3) driver instead of the legacy psycopg2
 if database_url.startswith("postgresql://"):
     database_url = database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+=======
+if database_url.startswith("postgresql://"):
+    database_url = "postgresql+psycopg://" + database_url[len("postgresql://"):]
+elif database_url.startswith("postgres://"):
+    database_url = "postgresql+psycopg://" + database_url[len("postgres://"):]
+>>>>>>> 34196ab (Add Railway config and handle postgres URL scheme)
 config.set_main_option("sqlalchemy.url", database_url)
 
 if config.config_file_name is not None:
