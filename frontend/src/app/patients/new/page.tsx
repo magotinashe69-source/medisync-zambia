@@ -66,7 +66,7 @@ export default function NewPatientPage() {
       <Header />
 
       <main className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-8">
+        <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
           <h1 className="text-2xl font-bold mb-6">Register New Patient</h1>
 
           {error && (
@@ -89,7 +89,7 @@ export default function NewPatientPage() {
                 required
                 value={nrc}
                 onChange={(e) => setNrc(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <p className="text-xs text-gray-500 mt-1">Format: 123456/78/1</p>
             </div>
@@ -107,7 +107,7 @@ export default function NewPatientPage() {
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -124,7 +124,7 @@ export default function NewPatientPage() {
                 required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Format: +260977123456 or 0977123456
@@ -144,7 +144,7 @@ export default function NewPatientPage() {
                 required
                 value={dateOfBirth}
                 onChange={(e) => setDateOfBirth(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -160,7 +160,7 @@ export default function NewPatientPage() {
                 required
                 value={gender}
                 onChange={(e) => setGender(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="" disabled>
                   Select gender
@@ -182,24 +182,24 @@ export default function NewPatientPage() {
                 rows={3}
                 value={allergies}
                 onChange={(e) => setAllergies(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <p className="text-xs text-gray-500 mt-1">
                 List any known drug or food allergies
               </p>
             </div>
 
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
               <Link
                 href="/dashboard"
-                className="bg-gray-200 text-gray-800 px-4 py-2 rounded font-medium hover:bg-gray-300"
+                className="inline-flex items-center justify-center min-h-[44px] w-full sm:w-auto bg-gray-200 text-gray-800 px-4 rounded font-medium hover:bg-gray-300"
               >
                 Cancel
               </Link>
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-blue-600 text-white px-5 py-2 rounded font-medium hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center min-h-[44px] w-full sm:w-auto bg-blue-600 text-white px-5 rounded font-medium hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
               >
                 {loading ? "Registering..." : "Register Patient"}
               </button>

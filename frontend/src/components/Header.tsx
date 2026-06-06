@@ -12,12 +12,12 @@ export default function Header() {
   }
 
   return (
-    <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4">
-      <div className="font-bold text-lg">MediSync Zambia</div>
+    <header className="flex items-center justify-between bg-white border-b border-gray-200 px-4 sm:px-6 py-3">
+      <div className="font-bold text-base sm:text-lg">MediSync Zambia</div>
       <button
         type="button"
         onClick={handleLogout}
-        className="text-red-600 hover:text-red-700 font-medium"
+        className="inline-flex items-center min-h-[44px] px-2 -mr-2 text-red-600 hover:text-red-700 font-medium"
       >
         Logout
       </button>

@@ -136,7 +136,7 @@ export default function PatientDetailPage() {
     return (
       <div className="min-h-screen bg-white">
         <Header />
-        <main className="max-w-4xl mx-auto px-6 py-12 text-center">
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 py-12 text-center">
           <h1 className="text-xl font-bold mb-2">Patient not found</h1>
           <p className="text-gray-600 mb-4">
             This patient may have been removed or the link is incorrect.
@@ -152,7 +152,7 @@ export default function PatientDetailPage() {
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded p-3 mb-4">
             {error}
@@ -166,7 +166,7 @@ export default function PatientDetailPage() {
             <section className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
               <h1 className="text-2xl font-bold mb-4">{patient.full_name}</h1>
 
-              <dl className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
                 <div>
                   <dt className="text-gray-500">NRC</dt>
                   <dd className="font-medium">{patient.nrc}</dd>
@@ -200,7 +200,7 @@ export default function PatientDetailPage() {
             <div className="my-6">
               <Link
                 href={`/patients/${id}/visits/new`}
-                className="inline-block bg-blue-600 text-white px-5 py-3 rounded font-medium hover:bg-blue-700"
+                className="inline-flex items-center justify-center w-full sm:w-auto bg-blue-600 text-white px-5 py-3 rounded font-medium hover:bg-blue-700"
               >
                 + Record New Visit
               </Link>

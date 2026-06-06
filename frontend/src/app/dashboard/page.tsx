@@ -81,7 +81,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-white">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {me && (
           <div className="mb-8">
             <h1 className="text-2xl font-bold">Welcome, Dr. {me.full_name}</h1>
@@ -89,17 +89,17 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="flex items-center justify-between mb-6 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name or NRC..."
-            className="flex-1 max-w-md border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full sm:max-w-md border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <Link
             href="/patients/new"
-            className="bg-blue-600 text-white px-4 py-2 rounded font-medium hover:bg-blue-700 whitespace-nowrap"
+            className="inline-flex items-center justify-center min-h-[44px] w-full sm:w-auto bg-blue-600 text-white px-4 rounded font-medium hover:bg-blue-700 whitespace-nowrap"
           >
             + Register New Patient
           </Link>
@@ -116,7 +116,29 @@ export default function DashboardPage() {
               : "No patients yet. Click 'Register New Patient' to add one."}
           </p>
         ) : (
-          <div className="border border-gray-200 rounded overflow-hidden">
+          <>
+            {/* Mobile: card view */}
+            <div className="md:hidden space-y-3">
+              {patients.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => router.push(`/patients/${p.id}`)}
+                  className="w-full text-left border border-gray-200 rounded-lg p-4 hover:bg-gray-50 active:bg-gray-100"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="font-medium">{p.full_name}</span>
+                    <span className="text-xs text-gray-500 whitespace-nowrap">
+                      {formatDate(p.created_at)}
+                    </span>
+                  </div>
+                  <div className="mt-1 text-sm text-gray-600">NRC: {p.nrc}</div>
+                  <div className="text-sm text-gray-600">{p.phone}</div>
+                </button>
+              ))}
+            </div>
+
+            {/* Tablet/Desktop: table view */}
+            <div className="hidden md:block border border-gray-200 rounded overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-left text-gray-700">
                 <tr>
@@ -141,7 +163,8 @@ export default function DashboardPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </main>
     </div>

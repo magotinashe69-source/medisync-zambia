@@ -175,7 +175,7 @@ export default function NewVisitPage() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <main className="max-w-[700px] mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-8">
+        <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
           <h1 className="text-2xl font-bold">Record New Visit</h1>
           <p className="text-gray-600 text-sm mt-1">
             for {patient ? patient.full_name : "…"}
@@ -205,7 +205,7 @@ export default function NewVisitPage() {
                     type="text"
                     value={vitalsBp}
                     onChange={(e) => setVitalsBp(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <p className="text-xs text-gray-500 mt-1">e.g. 120/80</p>
                 </div>
@@ -224,7 +224,7 @@ export default function NewVisitPage() {
                     min="0"
                     value={vitalsTemp}
                     onChange={(e) => setVitalsTemp(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -242,7 +242,7 @@ export default function NewVisitPage() {
                     min="0"
                     value={vitalsWeight}
                     onChange={(e) => setVitalsWeight(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -265,7 +265,7 @@ export default function NewVisitPage() {
                     required
                     value={diagnosisChoice}
                     onChange={(e) => setDiagnosisChoice(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 rounded px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="" disabled>
                       Select diagnosis
@@ -292,7 +292,7 @@ export default function NewVisitPage() {
                       required
                       value={diagnosisOther}
                       onChange={(e) => setDiagnosisOther(e.target.value)}
-                      className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 )}
@@ -309,7 +309,7 @@ export default function NewVisitPage() {
                     rows={3}
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Clinical observations, history...
@@ -324,7 +324,7 @@ export default function NewVisitPage() {
                 <button
                   type="button"
                   onClick={addPrescription}
-                  className="text-sm text-blue-600 hover:underline"
+                  className="inline-flex items-center min-h-[44px] px-2 -mr-2 text-sm text-blue-600 hover:underline"
                 >
                   + Add Prescription
                 </button>
@@ -348,7 +348,7 @@ export default function NewVisitPage() {
                         <button
                           type="button"
                           onClick={() => removePrescription(p.localId)}
-                          className="text-sm text-red-600 hover:text-red-700"
+                          className="inline-flex items-center min-h-[44px] px-2 -mr-2 text-sm text-red-600 hover:text-red-700"
                         >
                           Remove
                         </button>
@@ -370,11 +370,11 @@ export default function NewVisitPage() {
                                 e.target.value,
                               )
                             }
-                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                            className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                           />
                         </div>
 
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
                               Dosage
@@ -391,7 +391,7 @@ export default function NewVisitPage() {
                                 )
                               }
                               placeholder="500mg"
-                              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                              className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                             />
                           </div>
 
@@ -411,7 +411,7 @@ export default function NewVisitPage() {
                                 )
                               }
                               placeholder="twice daily"
-                              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                              className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                             />
                           </div>
 
@@ -431,7 +431,7 @@ export default function NewVisitPage() {
                                 )
                               }
                               placeholder="5 days"
-                              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                              className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                             />
                           </div>
                         </div>
@@ -450,7 +450,7 @@ export default function NewVisitPage() {
                                 e.target.value,
                               )
                             }
-                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                            className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                           />
                         </div>
                       </div>
@@ -460,17 +460,17 @@ export default function NewVisitPage() {
               )}
             </section>
 
-            <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t border-gray-200">
               <Link
                 href={`/patients/${patientId}`}
-                className="bg-gray-200 text-gray-800 px-4 py-2 rounded font-medium hover:bg-gray-300"
+                className="inline-flex items-center justify-center min-h-[44px] w-full sm:w-auto bg-gray-200 text-gray-800 px-4 rounded font-medium hover:bg-gray-300"
               >
                 Cancel
               </Link>
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-blue-600 text-white px-5 py-2 rounded font-medium hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center min-h-[44px] w-full sm:w-auto bg-blue-600 text-white px-5 rounded font-medium hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
               >
                 {loading ? "Saving..." : "Save Visit"}
               </button>
