@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
 import { apiPost } from "@/lib/api";
 
 export default function RegisterPage() {
@@ -38,138 +42,114 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-md p-6 sm:p-8">
-        <h1 className="text-3xl font-bold text-center">MediSync Zambia</h1>
-        <p className="text-gray-600 text-center mt-2">Create your account</p>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-primary-50 to-slate-50 px-4 py-10">
+      <div className="w-full max-w-lg">
+        {/* Brand */}
+        <div className="mb-6 flex flex-col items-center text-center">
+          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600 text-2xl font-bold text-white shadow-sm">
+            M
+          </div>
+          <h1 className="font-heading text-2xl font-bold text-slate-900 sm:text-3xl">
+            MediSync <span className="text-primary-600">Zambia</span>
+          </h1>
+          <p className="mt-1.5 text-sm text-slate-500">
+            Create your account to get started
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div>
-            <label
-              htmlFor="fullName"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Full name
-            </label>
-            <input
+        <Card className="p-6 sm:p-8">
+          <h2 className="text-lg font-semibold text-slate-900">Create account</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Tell us a little about you and your facility
+          </p>
+
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <Input
+              label="Full name"
               id="fullName"
               type="text"
               required
+              autoComplete="name"
+              hint="Your name as it should appear on records"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
 
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Email
-            </label>
-            <input
+            <Input
+              label="Email"
               id="email"
               type="email"
               required
+              autoComplete="email"
+              hint="You'll use this to sign in"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
 
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Password
-            </label>
-            <input
+            <Input
+              label="Password"
               id="password"
               type="password"
               required
               minLength={8}
+              autoComplete="new-password"
+              hint="At least 8 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <p className="text-xs text-gray-500 mt-1">At least 8 characters</p>
-          </div>
 
-          <div>
-            <label
-              htmlFor="role"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Role
-            </label>
-            <select
-              id="role"
-              required
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="doctor">Doctor</option>
-              <option value="nurse">Nurse</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Select
+                label="Role"
+                id="role"
+                required
+                hint="Your role at the facility"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+              >
+                <option value="doctor">Doctor</option>
+                <option value="nurse">Nurse</option>
+                <option value="admin">Admin</option>
+              </Select>
 
-          <div>
-            <label
-              htmlFor="hpczNumber"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              HPCZ number
-            </label>
-            <input
-              id="hpczNumber"
-              type="text"
-              value={hpczNumber}
-              onChange={(e) => setHpczNumber(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Optional — leave blank if not registered
-            </p>
-          </div>
+              <Input
+                label="HPCZ number"
+                id="hpczNumber"
+                type="text"
+                hint="Optional — leave blank if not registered"
+                value={hpczNumber}
+                onChange={(e) => setHpczNumber(e.target.value)}
+              />
+            </div>
 
-          <div>
-            <label
-              htmlFor="facilityName"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Facility name
-            </label>
-            <input
+            <Input
+              label="Facility name"
               id="facilityName"
               type="text"
               required
+              hint="The clinic or hospital where you work"
               value={facilityName}
               onChange={(e) => setFacilityName(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
 
-          {error && <p className="text-red-600 text-sm">{error}</p>}
+            {error && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {error}
+              </div>
+            )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full inline-flex items-center justify-center min-h-[44px] bg-blue-600 text-white rounded font-medium hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
-          >
-            {loading ? "Creating account..." : "Create Account"}
-          </button>
-        </form>
+            <Button type="submit" fullWidth loading={loading}>
+              {loading ? "Creating account…" : "Create Account"}
+            </Button>
+          </form>
 
-        <p className="text-center text-sm text-gray-600 mt-6">
-          Already have an account?{" "}
-          <Link href="/login" className="text-blue-600 hover:underline">
-            Sign in
-          </Link>
-        </p>
+          <p className="mt-6 text-center text-sm text-slate-600">
+            Already have an account?{" "}
+            <Link href="/login" className="font-medium text-primary-600 hover:underline">
+              Sign in
+            </Link>
+          </p>
+        </Card>
       </div>
     </div>
   );

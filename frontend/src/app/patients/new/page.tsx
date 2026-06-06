@@ -2,9 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useId, useState } from "react";
 
-import Header from "@/components/Header";
+import Button, { buttonClasses } from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import Header from "@/components/ui/Header";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
 import { apiPost } from "@/lib/api";
 import { clearToken, isLoggedIn } from "@/lib/auth";
 
@@ -19,6 +23,7 @@ const AUTH_ERROR_MESSAGES = new Set([
 
 export default function NewPatientPage() {
   const router = useRouter();
+  const allergiesId = useId();
   const [nrc, setNrc] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -62,150 +67,118 @@ export default function NewPatientPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <Header />
 
-      <main className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
-          <h1 className="text-2xl font-bold mb-6">Register New Patient</h1>
+      <main className="mx-auto max-w-2xl px-4 py-6 sm:px-6 sm:py-8">
+        <Link
+          href="/dashboard"
+          className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-700"
+        >
+          <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.83 10l3.94 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+          </svg>
+          Back to dashboard
+        </Link>
+
+        <Card className="p-6 sm:p-8">
+          <h1 className="font-heading text-xl font-bold text-slate-900 sm:text-2xl">
+            Register new patient
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Enter the patient&apos;s details to create their record.
+          </p>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded p-3 mb-4">
+            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label
-                htmlFor="nrc"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                NRC
-              </label>
-              <input
+          <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+            <Input
+              label="Full name"
+              id="fullName"
+              type="text"
+              required
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+            />
+
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <Input
+                label="NRC"
                 id="nrc"
                 type="text"
                 required
+                hint="Format: 123456/78/1"
                 value={nrc}
                 onChange={(e) => setNrc(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-xs text-gray-500 mt-1">Format: 123456/78/1</p>
-            </div>
-
-            <div>
-              <label
-                htmlFor="fullName"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Full Name
-              </label>
-              <input
-                id="fullName"
-                type="text"
-                required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="phone"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Phone
-              </label>
-              <input
+              <Input
+                label="Phone"
                 id="phone"
                 type="text"
                 required
+                hint="Format: +260977123456 or 0977123456"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Format: +260977123456 or 0977123456
-              </p>
             </div>
 
-            <div>
-              <label
-                htmlFor="dateOfBirth"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Date of Birth
-              </label>
-              <input
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <Input
+                label="Date of birth"
                 id="dateOfBirth"
                 type="date"
                 required
                 value={dateOfBirth}
                 onChange={(e) => setDateOfBirth(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            </div>
-
-            <div>
-              <label
-                htmlFor="gender"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Gender
-              </label>
-              <select
+              <Select
+                label="Gender"
                 id="gender"
                 required
                 value={gender}
                 onChange={(e) => setGender(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="" disabled>
                   Select gender
                 </option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
-              </select>
+              </Select>
             </div>
 
             <div>
-              <label
-                htmlFor="allergies"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+              <label htmlFor={allergiesId} className="block text-sm font-medium text-slate-700 mb-1.5">
                 Allergies
               </label>
               <textarea
-                id="allergies"
+                id={allergiesId}
                 rows={3}
                 value={allergies}
                 onChange={(e) => setAllergies(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm sm:text-base text-slate-900 placeholder:text-slate-400 transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="mt-1 text-xs text-slate-500">
                 List any known drug or food allergies
               </p>
             </div>
 
-            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+            <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end">
               <Link
                 href="/dashboard"
-                className="inline-flex items-center justify-center min-h-[44px] w-full sm:w-auto bg-gray-200 text-gray-800 px-4 rounded font-medium hover:bg-gray-300"
+                className={buttonClasses({ variant: "ghost", className: "w-full sm:w-auto" })}
               >
                 Cancel
               </Link>
-              <button
-                type="submit"
-                disabled={loading}
-                className="inline-flex items-center justify-center min-h-[44px] w-full sm:w-auto bg-blue-600 text-white px-5 rounded font-medium hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
-              >
-                {loading ? "Registering..." : "Register Patient"}
-              </button>
+              <Button type="submit" loading={loading} className="w-full sm:w-auto">
+                {loading ? "Registering…" : "Register Patient"}
+              </Button>
             </div>
           </form>
-        </div>
+        </Card>
       </main>
     </div>
   );

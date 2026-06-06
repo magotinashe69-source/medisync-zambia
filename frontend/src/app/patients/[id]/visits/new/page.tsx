@@ -2,9 +2,13 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useId, useState } from "react";
 
-import Header from "@/components/Header";
+import Button, { buttonClasses } from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import Header from "@/components/ui/Header";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
 import { apiGet, apiPost } from "@/lib/api";
 import { clearToken, isLoggedIn } from "@/lib/auth";
 
@@ -55,6 +59,7 @@ export default function NewVisitPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const patientId = params.id;
+  const notesId = useId();
 
   const [patient, setPatient] = useState<Patient | null>(null);
 
@@ -172,311 +177,242 @@ export default function NewVisitPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <Header />
-      <main className="max-w-[700px] mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
-          <h1 className="text-2xl font-bold">Record New Visit</h1>
-          <p className="text-gray-600 text-sm mt-1">
-            for {patient ? patient.full_name : "…"}
-          </p>
+      <main className="mx-auto max-w-2xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
+        <Link
+          href={`/patients/${patientId}`}
+          className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-700"
+        >
+          <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.83 10l3.94 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+          </svg>
+          Back to patient
+        </Link>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded p-3 mt-4 whitespace-pre-line">
-              {error}
+        <h1 className="font-heading text-xl font-bold text-slate-900 sm:text-2xl">
+          Record new visit
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          for {patient ? patient.full_name : "…"}
+        </p>
+
+        {error && (
+          <div className="mt-4 whitespace-pre-line rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+          {/* Vitals */}
+          <Card>
+            <h2 className="font-heading text-base font-semibold text-slate-900">Vitals</h2>
+            <p className="mt-0.5 text-sm text-slate-500">Optional — record what was measured.</p>
+
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <Input
+                label="Blood pressure"
+                id="bp"
+                type="text"
+                hint="e.g. 120/80"
+                value={vitalsBp}
+                onChange={(e) => setVitalsBp(e.target.value)}
+              />
+              <Input
+                label="Temperature (°C)"
+                id="temp"
+                type="number"
+                step="0.1"
+                min="0"
+                value={vitalsTemp}
+                onChange={(e) => setVitalsTemp(e.target.value)}
+              />
+              <Input
+                label="Weight (kg)"
+                id="weight"
+                type="number"
+                step="0.1"
+                min="0"
+                value={vitalsWeight}
+                onChange={(e) => setVitalsWeight(e.target.value)}
+              />
             </div>
-          )}
+          </Card>
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-8">
-            <section>
-              <h2 className="text-lg font-semibold mb-4 border-b border-gray-200 pb-2">
-                Vitals
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="bp"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Blood Pressure
-                  </label>
-                  <input
-                    id="bp"
-                    type="text"
-                    value={vitalsBp}
-                    onChange={(e) => setVitalsBp(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">e.g. 120/80</p>
-                </div>
+          {/* Diagnosis */}
+          <Card>
+            <h2 className="font-heading text-base font-semibold text-slate-900">Diagnosis</h2>
 
-                <div>
-                  <label
-                    htmlFor="temp"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Temperature (°C)
-                  </label>
-                  <input
-                    id="temp"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    value={vitalsTemp}
-                    onChange={(e) => setVitalsTemp(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+            <div className="mt-4 space-y-4">
+              <Select
+                label="Diagnosis"
+                id="diagnosis"
+                required
+                value={diagnosisChoice}
+                onChange={(e) => setDiagnosisChoice(e.target.value)}
+              >
+                <option value="" disabled>
+                  Select diagnosis
+                </option>
+                {DIAGNOSIS_OPTIONS.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </Select>
 
-                <div>
-                  <label
-                    htmlFor="weight"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Weight (kg)
-                  </label>
-                  <input
-                    id="weight"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    value={vitalsWeight}
-                    onChange={(e) => setVitalsWeight(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              {diagnosisChoice === OTHER_OPTION && (
+                <Input
+                  label="Specify diagnosis"
+                  id="diagnosisOther"
+                  type="text"
+                  required
+                  value={diagnosisOther}
+                  onChange={(e) => setDiagnosisOther(e.target.value)}
+                />
+              )}
+
+              <div>
+                <label htmlFor={notesId} className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Notes
+                </label>
+                <textarea
+                  id={notesId}
+                  rows={3}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm sm:text-base text-slate-900 placeholder:text-slate-400 transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <p className="mt-1 text-xs text-slate-500">
+                  Clinical observations, history…
+                </p>
               </div>
-            </section>
+            </div>
+          </Card>
 
-            <section>
-              <h2 className="text-lg font-semibold mb-4 border-b border-gray-200 pb-2">
-                Diagnosis
+          {/* Prescriptions */}
+          <Card>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="font-heading text-base font-semibold text-slate-900">
+                Prescriptions
               </h2>
-              <div className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="diagnosis"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Diagnosis
-                  </label>
-                  <select
-                    id="diagnosis"
-                    required
-                    value={diagnosisChoice}
-                    onChange={(e) => setDiagnosisChoice(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="" disabled>
-                      Select diagnosis
-                    </option>
-                    {DIAGNOSIS_OPTIONS.map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              {prescriptions.length > 0 && (
+                <span className="text-sm text-slate-400">
+                  {prescriptions.length} added
+                </span>
+              )}
+            </div>
 
-                {diagnosisChoice === OTHER_OPTION && (
-                  <div>
-                    <label
-                      htmlFor="diagnosisOther"
-                      className="block text-sm font-medium text-gray-700 mb-1"
+            <div className="mt-4 space-y-4">
+              {prescriptions.length === 0 && (
+                <p className="text-sm text-slate-500">
+                  No prescriptions added yet.
+                </p>
+              )}
+
+              {prescriptions.map((p, i) => (
+                <div
+                  key={p.localId}
+                  className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="font-heading text-sm font-semibold text-slate-900">
+                      Prescription {i + 1}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => removePrescription(p.localId)}
+                      className="inline-flex min-h-[44px] items-center gap-1 px-2 -mr-2 text-sm font-medium text-red-600 hover:text-red-700"
                     >
-                      Specify diagnosis
-                    </label>
-                    <input
-                      id="diagnosisOther"
+                      <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M8.75 1a1 1 0 00-.95.68L7.5 3H4a.75.75 0 000 1.5h.5l.6 11.2A2 2 0 007.1 17h5.8a2 2 0 002-1.8L15.5 4.5h.5a.75.75 0 000-1.5H12.5l-.3-1.32A1 1 0 0011.25 1h-2.5zM9 7.25a.75.75 0 011.5 0v6a.75.75 0 01-1.5 0v-6z" clipRule="evenodd" />
+                      </svg>
+                      Remove
+                    </button>
+                  </div>
+
+                  <div className="mt-3 space-y-3">
+                    <Input
+                      label="Medication name"
                       type="text"
                       required
-                      value={diagnosisOther}
-                      onChange={(e) => setDiagnosisOther(e.target.value)}
-                      className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={p.medication_name}
+                      onChange={(e) =>
+                        updatePrescription(p.localId, "medication_name", e.target.value)
+                      }
+                    />
+
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <Input
+                        label="Dosage"
+                        type="text"
+                        required
+                        placeholder="500mg"
+                        value={p.dosage}
+                        onChange={(e) =>
+                          updatePrescription(p.localId, "dosage", e.target.value)
+                        }
+                      />
+                      <Input
+                        label="Frequency"
+                        type="text"
+                        required
+                        placeholder="twice daily"
+                        value={p.frequency}
+                        onChange={(e) =>
+                          updatePrescription(p.localId, "frequency", e.target.value)
+                        }
+                      />
+                      <Input
+                        label="Duration"
+                        type="text"
+                        required
+                        placeholder="5 days"
+                        value={p.duration}
+                        onChange={(e) =>
+                          updatePrescription(p.localId, "duration", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <Input
+                      label="Instructions"
+                      type="text"
+                      value={p.instructions}
+                      onChange={(e) =>
+                        updatePrescription(p.localId, "instructions", e.target.value)
+                      }
                     />
                   </div>
-                )}
-
-                <div>
-                  <label
-                    htmlFor="notes"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Notes
-                  </label>
-                  <textarea
-                    id="notes"
-                    rows={3}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Clinical observations, history...
-                  </p>
                 </div>
-              </div>
-            </section>
+              ))}
 
-            <section>
-              <div className="flex items-center justify-between mb-4 border-b border-gray-200 pb-2">
-                <h2 className="text-lg font-semibold">Prescriptions</h2>
-                <button
-                  type="button"
-                  onClick={addPrescription}
-                  className="inline-flex items-center min-h-[44px] px-2 -mr-2 text-sm text-blue-600 hover:underline"
-                >
-                  + Add Prescription
-                </button>
-              </div>
-
-              {prescriptions.length === 0 ? (
-                <p className="text-sm text-gray-500 py-3">
-                  No prescriptions yet.
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {prescriptions.map((p, i) => (
-                    <div
-                      key={p.localId}
-                      className="border border-gray-200 rounded p-4 bg-gray-50"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <p className="text-sm font-medium text-gray-700">
-                          Prescription {i + 1}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => removePrescription(p.localId)}
-                          className="inline-flex items-center min-h-[44px] px-2 -mr-2 text-sm text-red-600 hover:text-red-700"
-                        >
-                          Remove
-                        </button>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Medication Name
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={p.medication_name}
-                            onChange={(e) =>
-                              updatePrescription(
-                                p.localId,
-                                "medication_name",
-                                e.target.value,
-                              )
-                            }
-                            className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Dosage
-                            </label>
-                            <input
-                              type="text"
-                              required
-                              value={p.dosage}
-                              onChange={(e) =>
-                                updatePrescription(
-                                  p.localId,
-                                  "dosage",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="500mg"
-                              className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Frequency
-                            </label>
-                            <input
-                              type="text"
-                              required
-                              value={p.frequency}
-                              onChange={(e) =>
-                                updatePrescription(
-                                  p.localId,
-                                  "frequency",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="twice daily"
-                              className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Duration
-                            </label>
-                            <input
-                              type="text"
-                              required
-                              value={p.duration}
-                              onChange={(e) =>
-                                updatePrescription(
-                                  p.localId,
-                                  "duration",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="5 days"
-                              className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Instructions
-                          </label>
-                          <input
-                            type="text"
-                            value={p.instructions}
-                            onChange={(e) =>
-                              updatePrescription(
-                                p.localId,
-                                "instructions",
-                                e.target.value,
-                              )
-                            }
-                            className="w-full border border-gray-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t border-gray-200">
-              <Link
-                href={`/patients/${patientId}`}
-                className="inline-flex items-center justify-center min-h-[44px] w-full sm:w-auto bg-gray-200 text-gray-800 px-4 rounded font-medium hover:bg-gray-300"
-              >
-                Cancel
-              </Link>
               <button
-                type="submit"
-                disabled={loading}
-                className="inline-flex items-center justify-center min-h-[44px] w-full sm:w-auto bg-blue-600 text-white px-5 rounded font-medium hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
+                type="button"
+                onClick={addPrescription}
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-slate-300 text-sm font-medium text-primary-700 hover:border-primary-400 hover:bg-primary-50"
               >
-                {loading ? "Saving..." : "Save Visit"}
+                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path d="M10 5a.75.75 0 01.75.75v3.5h3.5a.75.75 0 010 1.5h-3.5v3.5a.75.75 0 01-1.5 0v-3.5h-3.5a.75.75 0 010-1.5h3.5v-3.5A.75.75 0 0110 5z" />
+                </svg>
+                Add prescription
               </button>
             </div>
-          </form>
-        </div>
+          </Card>
+
+          {/* Actions */}
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <Link
+              href={`/patients/${patientId}`}
+              className={buttonClasses({ variant: "ghost", className: "w-full sm:w-auto" })}
+            >
+              Cancel
+            </Link>
+            <Button type="submit" loading={loading} className="w-full sm:w-auto">
+              {loading ? "Saving…" : "Save Visit"}
+            </Button>
+          </div>
+        </form>
       </main>
     </div>
   );

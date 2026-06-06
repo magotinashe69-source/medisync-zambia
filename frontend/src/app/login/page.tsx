@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import Input from "@/components/ui/Input";
 import { apiPost } from "@/lib/api";
 import { saveToken } from "@/lib/auth";
 
@@ -36,63 +39,83 @@ export default function LoginPage() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-md p-6 sm:p-8">
-        <h1 className="text-3xl font-bold text-center">MediSync Zambia</h1>
-        <p className="text-gray-600 text-center mt-2">Sign in to your account</p>
+  function fillDemo() {
+    setEmail("demo@onpoint.zm");
+    setPassword("Demo2026");
+  }
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Email
-            </label>
-            <input
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-primary-50 to-slate-50 px-4 py-10">
+      <div className="w-full max-w-md">
+        {/* Brand */}
+        <div className="mb-6 flex flex-col items-center text-center">
+          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600 text-2xl font-bold text-white shadow-sm">
+            M
+          </div>
+          <h1 className="font-heading text-2xl font-bold text-slate-900 sm:text-3xl">
+            MediSync <span className="text-primary-600">Zambia</span>
+          </h1>
+          <p className="mt-1.5 text-sm text-slate-500">
+            Simple, secure patient records for Zambian clinics
+          </p>
+        </div>
+
+        <Card className="p-6 sm:p-8">
+          <h2 className="text-lg font-semibold text-slate-900">Sign in</h2>
+          <p className="mt-1 text-sm text-slate-500">Welcome back — sign in to continue</p>
+
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <Input
+              label="Email"
               id="email"
               type="email"
               required
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
 
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+            <div>
+              <Input
+                label="Password"
+                id="password"
+                type="password"
+                required
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={fillDemo}
+                className="mt-1 inline-flex min-h-[44px] items-center text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline"
+              >
+                Try demo account
+              </button>
+            </div>
 
-          {error && <p className="text-red-600 text-sm">{error}</p>}
+            {error && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {error}
+              </div>
+            )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full inline-flex items-center justify-center min-h-[44px] bg-blue-600 text-white rounded font-medium hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
+            <Button type="submit" fullWidth loading={loading}>
+              {loading ? "Signing in…" : "Sign In"}
+            </Button>
+          </form>
 
-        <p className="text-center text-sm text-gray-600 mt-6">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-blue-600 hover:underline">
-            Register here
-          </Link>
+          <p className="mt-6 text-center text-sm text-slate-600">
+            Don&apos;t have an account?{" "}
+            <Link href="/register" className="font-medium text-primary-600 hover:underline">
+              Register here
+            </Link>
+          </p>
+        </Card>
+
+        {/* Reassurance */}
+        <p className="mt-5 text-center text-xs text-slate-400">
+          🔒 Sample data only — no real patient information
         </p>
       </div>
     </div>
