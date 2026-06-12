@@ -51,6 +51,34 @@ class PatientBase(BaseModel):
     gender: str
     allergies: str | None = None
 
+    # ----- Personal details -----
+    next_of_kin_name: str | None = None
+    next_of_kin_relationship: str | None = None
+    next_of_kin_phone: str | None = None
+    marital_status: str | None = None
+    occupation: str | None = None
+    preferred_language: str = "en"
+
+    # ----- Insurance -----
+    has_insurance: bool = False
+    insurance_provider: str | None = None
+    insurance_member_number: str | None = None
+    insurance_plan_type: str | None = None
+
+    # ----- Clinical background -----
+    blood_group: str | None = None
+    known_allergies: str | None = None
+    chronic_conditions: str | None = None
+    current_medications: str | None = None
+    family_history: str | None = None
+    social_history: str | None = None
+    immunization_record: str | None = None
+
+    # ----- Emergency -----
+    emergency_critical_allergies: str | None = None
+    emergency_contact_primary: str | None = None
+    emergency_contact_secondary: str | None = None
+
 
 class PatientCreate(PatientBase):
     @field_validator("nrc")
@@ -67,9 +95,42 @@ class PatientCreate(PatientBase):
             raise ValueError("Phone must start with +260 or 0 followed by 9 digits")
         return v
 
+    @field_validator("next_of_kin_phone")
+    @classmethod
+    def validate_next_of_kin_phone(cls, v: str | None) -> str | None:
+        if v is None or v == "":
+            return None
+        if not PHONE_PATTERN.match(v):
+            raise ValueError("Phone must start with +260 or 0 followed by 9 digits")
+        return v
+
 
 class PatientResponse(PatientBase):
     id: str
+    created_by: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ----- Past surgery -----
+
+class PastSurgeryBase(BaseModel):
+    surgery_date: date
+    procedure_name: str
+    facility: str
+    anaesthetic_used: str | None = None
+    notes: str | None = None
+
+
+class PastSurgeryCreate(PastSurgeryBase):
+    pass
+
+
+class PastSurgeryResponse(PastSurgeryBase):
+    id: str
+    patient_id: str
     created_by: str
     created_at: datetime
     updated_at: datetime

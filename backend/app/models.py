@@ -1,8 +1,8 @@
 import uuid
 
-from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, String, Text
+from sqlalchemy import Boolean, Column, Date, DateTime, Float, ForeignKey, String, Text
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
+from sqlalchemy.sql import expression, func
 
 from .database import Base
 
@@ -44,6 +44,39 @@ class Patient(Base):
     date_of_birth = Column(Date, nullable=False)
     gender = Column(String(20), nullable=False)
     allergies = Column(Text, nullable=True)
+
+    # ----- Personal details -----
+    next_of_kin_name = Column(String(255), nullable=True)
+    next_of_kin_relationship = Column(String(100), nullable=True)
+    next_of_kin_phone = Column(String(20), nullable=True)
+    marital_status = Column(String(50), nullable=True)
+    occupation = Column(String(255), nullable=True)
+    preferred_language = Column(
+        String(20), nullable=False, server_default="en", default="en"
+    )
+
+    # ----- Insurance -----
+    has_insurance = Column(
+        Boolean, nullable=False, server_default=expression.false(), default=False
+    )
+    insurance_provider = Column(String(255), nullable=True)
+    insurance_member_number = Column(String(100), nullable=True)
+    insurance_plan_type = Column(String(100), nullable=True)
+
+    # ----- Clinical background -----
+    blood_group = Column(String(10), nullable=True)
+    known_allergies = Column(Text, nullable=True)
+    chronic_conditions = Column(Text, nullable=True)
+    current_medications = Column(Text, nullable=True)
+    family_history = Column(Text, nullable=True)
+    social_history = Column(Text, nullable=True)
+    immunization_record = Column(Text, nullable=True)
+
+    # ----- Emergency -----
+    emergency_critical_allergies = Column(Text, nullable=True)
+    emergency_contact_primary = Column(String(255), nullable=True)
+    emergency_contact_secondary = Column(String(255), nullable=True)
+
     created_by = Column(String(36), ForeignKey("users.id"), nullable=False)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
@@ -56,6 +89,32 @@ class Patient(Base):
 
     creator = relationship("User", back_populates="patients_created")
     visits = relationship("Visit", back_populates="patient")
+    past_surgeries = relationship(
+        "PastSurgery", back_populates="patient", cascade="all, delete-orphan"
+    )
+
+
+class PastSurgery(Base):
+    __tablename__ = "past_surgeries"
+
+    id = Column(String(36), primary_key=True, default=gen_uuid)
+    patient_id = Column(String(36), ForeignKey("patients.id"), nullable=False)
+    surgery_date = Column(Date, nullable=False)
+    procedure_name = Column(String(255), nullable=False)
+    facility = Column(String(255), nullable=False)
+    anaesthetic_used = Column(String(255), nullable=True)
+    notes = Column(Text, nullable=True)
+    created_by = Column(String(36), ForeignKey("users.id"), nullable=False)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    patient = relationship("Patient", back_populates="past_surgeries")
 
 
 class Visit(Base):
