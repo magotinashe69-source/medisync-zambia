@@ -40,7 +40,8 @@ def _find_patient(db: Session, nrc_or_id: str) -> Patient | None:
 
 
 @router.get(
-    "/patients/emergency/{nrc_or_id}",
+    # `:path` converter so NRCs containing slashes (e.g. 123456/78/1) match.
+    "/patients/emergency/{nrc_or_id:path}",
     response_model=schemas.EmergencyCardResponse,
 )
 def emergency_lookup(

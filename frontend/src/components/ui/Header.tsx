@@ -29,8 +29,20 @@ export default function Header({ userName, facilityName }: HeaderProps) {
           </span>
         </Link>
 
-        {/* Desktop */}
-        <div className="hidden items-center gap-4 sm:flex">
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Emergency — always visible, fast access from any page */}
+          <Link
+            href="/emergency"
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg bg-red-600 px-3 text-sm font-bold text-white shadow-sm hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path d="M9 2.5a1 1 0 011-1 1 1 0 011 1V8h5.5a1 1 0 011 1 1 1 0 01-1 1H11v5.5a1 1 0 01-1 1 1 1 0 01-1-1V10H3.5a1 1 0 01-1-1 1 1 0 011-1H9V2.5z" />
+            </svg>
+            Emergency
+          </Link>
+
+          {/* Desktop */}
+          <div className="hidden items-center gap-4 sm:flex">
           {userName && (
             <div className="text-right leading-tight">
               <p className="text-sm font-medium text-slate-900">{userName}</p>
@@ -62,6 +74,7 @@ export default function Header({ userName, facilityName }: HeaderProps) {
             )}
           </svg>
         </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
