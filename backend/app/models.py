@@ -21,6 +21,7 @@ class User(Base):
     role = Column(String(20), nullable=False)
     hpcz_number = Column(String(50), nullable=True)
     facility_name = Column(String(255), nullable=False)
+    country_id = Column(String(36), ForeignKey("countries.id"), nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(
@@ -32,6 +33,7 @@ class User(Base):
 
     patients_created = relationship("Patient", back_populates="creator")
     visits = relationship("Visit", back_populates="doctor")
+    country = relationship("Country")
 
 
 class Patient(Base):
@@ -78,6 +80,7 @@ class Patient(Base):
     emergency_contact_secondary = Column(String(255), nullable=True)
 
     created_by = Column(String(36), ForeignKey("users.id"), nullable=False)
+    country_id = Column(String(36), ForeignKey("countries.id"), nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(
@@ -88,6 +91,7 @@ class Patient(Base):
     )
 
     creator = relationship("User", back_populates="patients_created")
+    country = relationship("Country")
     visits = relationship("Visit", back_populates="patient")
     past_surgeries = relationship(
         "PastSurgery", back_populates="patient", cascade="all, delete-orphan"
@@ -184,6 +188,36 @@ class AuditLog(Base):
 
     user = relationship("User")
     patient = relationship("Patient")
+
+
+class Country(Base):
+    __tablename__ = "countries"
+
+    id = Column(String(36), primary_key=True, default=gen_uuid)
+    code = Column(String(2), unique=True, nullable=False, index=True)
+    name = Column(String(100), nullable=False)
+    currency_code = Column(String(3), nullable=False)
+    phone_country_code = Column(String(10), nullable=False)
+    default_language = Column(
+        String(10), nullable=False, server_default="en", default="en"
+    )
+    national_id_label = Column(String(50), nullable=False)
+    national_id_format_regex = Column(String(255), nullable=False)
+    national_id_hint = Column(String(255), nullable=True)
+    phone_format_regex = Column(String(255), nullable=False)
+    phone_hint = Column(String(255), nullable=True)
+    medical_council_name = Column(String(100), nullable=True)
+    is_active = Column(
+        Boolean, nullable=False, server_default=expression.true(), default=True
+    )
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
 
 
 class DrugInteractionRule(Base):
