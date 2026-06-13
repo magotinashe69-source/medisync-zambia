@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { FormEvent, useEffect, useId, useState } from "react";
+import { FormEvent, useCallback, useEffect, useId, useState } from "react";
 
 import Button, { buttonClasses } from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
@@ -55,6 +55,229 @@ function blankPrescription(): PrescriptionInput {
   };
 }
 
+type Severity = "severe" | "moderate" | "minor";
+
+type InteractionWarning = {
+  severity: Severity;
+  drug_name: string;
+  conflicting_with: string | null;
+  warning_message: string;
+  clinical_action: string;
+  source_reference: string | null;
+};
+
+type RowStatus = { hasWarnings: boolean; acknowledged: boolean };
+
+const SEVERITY_STYLES: Record<
+  Severity,
+  { box: string; label: string; labelCls: string; icon: string; iconCls: string }
+> = {
+  severe: {
+    box: "border-red-300 bg-red-50",
+    label: "SEVERE INTERACTION",
+    labelCls: "text-red-800",
+    icon: "⚠",
+    iconCls: "text-2xl text-red-600",
+  },
+  moderate: {
+    box: "border-amber-300 bg-amber-50",
+    label: "Moderate interaction",
+    labelCls: "text-amber-900",
+    icon: "⚠",
+    iconCls: "text-xl text-amber-600",
+  },
+  minor: {
+    box: "border-blue-200 bg-blue-50",
+    label: "Note",
+    labelCls: "text-blue-900",
+    icon: "ℹ",
+    iconCls: "text-xl text-blue-600",
+  },
+};
+
+function PrescriptionRow({
+  patientId,
+  index,
+  value,
+  onChange,
+  onRemove,
+  onStatusChange,
+}: {
+  patientId: string;
+  index: number;
+  value: PrescriptionInput;
+  onChange: (field: keyof Omit<PrescriptionInput, "localId">, value: string) => void;
+  onRemove: () => void;
+  onStatusChange: (localId: string, status: RowStatus) => void;
+}) {
+  const [warnings, setWarnings] = useState<InteractionWarning[]>([]);
+  const [checking, setChecking] = useState(false);
+  const [acknowledged, setAcknowledged] = useState(false);
+
+  const med = value.medication_name.trim();
+
+  // Debounced interaction check (500ms) whenever the medication name changes.
+  // All state updates happen inside the timer callback (not synchronously in
+  // the effect body) to avoid cascading renders.
+  useEffect(() => {
+    let cancelled = false;
+    const t = setTimeout(
+      () => {
+        if (cancelled) return;
+        if (med.length < 3) {
+          setWarnings([]);
+          setChecking(false);
+          setAcknowledged(false);
+          return;
+        }
+        setChecking(true);
+        apiPost<InteractionWarning[]>("/check-interactions", {
+          patient_id: patientId,
+          proposed_medication: med,
+        })
+          .then((w) => {
+            if (cancelled) return;
+            setWarnings(w);
+            setAcknowledged(false); // new results must be re-acknowledged
+          })
+          .catch(() => {
+            if (!cancelled) setWarnings([]);
+          })
+          .finally(() => {
+            if (!cancelled) setChecking(false);
+          });
+      },
+      med.length < 3 ? 0 : 500,
+    );
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [med, patientId]);
+
+  // Report this row's blocking status up to the parent.
+  useEffect(() => {
+    onStatusChange(value.localId, {
+      hasWarnings: warnings.length > 0,
+      acknowledged,
+    });
+  }, [warnings, acknowledged, value.localId, onStatusChange]);
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <div className="flex items-center justify-between">
+        <p className="font-heading text-sm font-semibold text-slate-900">
+          Prescription {index + 1}
+        </p>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="inline-flex min-h-[44px] items-center gap-1 px-2 -mr-2 text-sm font-medium text-red-600 hover:text-red-700"
+        >
+          <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fillRule="evenodd" d="M8.75 1a1 1 0 00-.95.68L7.5 3H4a.75.75 0 000 1.5h.5l.6 11.2A2 2 0 007.1 17h5.8a2 2 0 002-1.8L15.5 4.5h.5a.75.75 0 000-1.5H12.5l-.3-1.32A1 1 0 0011.25 1h-2.5zM9 7.25a.75.75 0 011.5 0v6a.75.75 0 01-1.5 0v-6z" clipRule="evenodd" />
+          </svg>
+          Remove
+        </button>
+      </div>
+
+      <div className="mt-3 space-y-3">
+        <Input
+          label="Medication name"
+          type="text"
+          required
+          value={value.medication_name}
+          onChange={(e) => onChange("medication_name", e.target.value)}
+        />
+
+        {/* Interaction warnings — shown directly below the medication input */}
+        {checking && (
+          <p className="text-xs text-slate-400">Checking interactions…</p>
+        )}
+
+        {warnings.length > 0 && (
+          <div className="space-y-2">
+            {warnings.map((w, i) => {
+              const s = SEVERITY_STYLES[w.severity];
+              return (
+                <div
+                  key={`${w.drug_name}-${w.conflicting_with}-${i}`}
+                  className={`flex gap-2.5 rounded-lg border px-3 py-2.5 ${s.box}`}
+                >
+                  <span className={`leading-none ${s.iconCls}`} aria-hidden="true">
+                    {s.icon}
+                  </span>
+                  <div className="min-w-0 text-sm">
+                    <p className={`font-bold uppercase tracking-wide ${s.labelCls}`}>
+                      {s.label}
+                    </p>
+                    <p className={`mt-0.5 ${s.labelCls}`}>{w.warning_message}</p>
+                    <p className={`mt-1 font-medium ${s.labelCls}`}>
+                      Action: {w.clinical_action}
+                    </p>
+                    {w.source_reference && (
+                      <p className="mt-1 text-xs text-slate-500">
+                        Source: {w.source_reference}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Override requires explicit acknowledgement */}
+            <label className="flex min-h-[44px] cursor-pointer items-center gap-2.5 rounded-lg border border-slate-300 bg-white px-3 py-2">
+              <input
+                type="checkbox"
+                checked={acknowledged}
+                onChange={(e) => setAcknowledged(e.target.checked)}
+                className="h-5 w-5 rounded border-slate-300 text-primary-600 focus:ring-2 focus:ring-primary-500"
+              />
+              <span className="text-sm font-medium text-slate-700">
+                I have reviewed these interaction warnings and will proceed.
+              </span>
+            </label>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <Input
+            label="Dosage"
+            type="text"
+            required
+            placeholder="500mg"
+            value={value.dosage}
+            onChange={(e) => onChange("dosage", e.target.value)}
+          />
+          <Input
+            label="Frequency"
+            type="text"
+            required
+            placeholder="twice daily"
+            value={value.frequency}
+            onChange={(e) => onChange("frequency", e.target.value)}
+          />
+          <Input
+            label="Duration"
+            type="text"
+            required
+            placeholder="5 days"
+            value={value.duration}
+            onChange={(e) => onChange("duration", e.target.value)}
+          />
+        </div>
+
+        <Input
+          label="Instructions"
+          type="text"
+          value={value.instructions}
+          onChange={(e) => onChange("instructions", e.target.value)}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function NewVisitPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
@@ -72,6 +295,7 @@ export default function NewVisitPage() {
   const [notes, setNotes] = useState("");
 
   const [prescriptions, setPrescriptions] = useState<PrescriptionInput[]>([]);
+  const [rowStatus, setRowStatus] = useState<Record<string, RowStatus>>({});
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -107,7 +331,28 @@ export default function NewVisitPage() {
 
   function removePrescription(localId: string) {
     setPrescriptions((prev) => prev.filter((p) => p.localId !== localId));
+    setRowStatus((prev) => {
+      const next = { ...prev };
+      delete next[localId];
+      return next;
+    });
   }
+
+  const handleStatusChange = useCallback((localId: string, status: RowStatus) => {
+    setRowStatus((prev) => {
+      const cur = prev[localId];
+      if (cur && cur.hasWarnings === status.hasWarnings && cur.acknowledged === status.acknowledged) {
+        return prev; // no change — avoid needless re-render
+      }
+      return { ...prev, [localId]: status };
+    });
+  }, []);
+
+  // True when at least one prescription has un-acknowledged interaction warnings.
+  const hasUnacknowledged = prescriptions.some((p) => {
+    const s = rowStatus[p.localId];
+    return s?.hasWarnings && !s.acknowledged;
+  });
 
   function updatePrescription(
     localId: string,
@@ -134,6 +379,14 @@ export default function NewVisitPage() {
         diagnosisChoice === OTHER_OPTION
           ? "Please specify the diagnosis"
           : "Please select a diagnosis",
+      );
+      setLoading(false);
+      return;
+    }
+
+    if (hasUnacknowledged) {
+      setError(
+        "Please review and acknowledge the interaction warnings before saving.",
       );
       setLoading(false);
       return;
@@ -311,80 +564,15 @@ export default function NewVisitPage() {
               )}
 
               {prescriptions.map((p, i) => (
-                <div
+                <PrescriptionRow
                   key={p.localId}
-                  className="rounded-xl border border-slate-200 bg-slate-50 p-4"
-                >
-                  <div className="flex items-center justify-between">
-                    <p className="font-heading text-sm font-semibold text-slate-900">
-                      Prescription {i + 1}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => removePrescription(p.localId)}
-                      className="inline-flex min-h-[44px] items-center gap-1 px-2 -mr-2 text-sm font-medium text-red-600 hover:text-red-700"
-                    >
-                      <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M8.75 1a1 1 0 00-.95.68L7.5 3H4a.75.75 0 000 1.5h.5l.6 11.2A2 2 0 007.1 17h5.8a2 2 0 002-1.8L15.5 4.5h.5a.75.75 0 000-1.5H12.5l-.3-1.32A1 1 0 0011.25 1h-2.5zM9 7.25a.75.75 0 011.5 0v6a.75.75 0 01-1.5 0v-6z" clipRule="evenodd" />
-                      </svg>
-                      Remove
-                    </button>
-                  </div>
-
-                  <div className="mt-3 space-y-3">
-                    <Input
-                      label="Medication name"
-                      type="text"
-                      required
-                      value={p.medication_name}
-                      onChange={(e) =>
-                        updatePrescription(p.localId, "medication_name", e.target.value)
-                      }
-                    />
-
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                      <Input
-                        label="Dosage"
-                        type="text"
-                        required
-                        placeholder="500mg"
-                        value={p.dosage}
-                        onChange={(e) =>
-                          updatePrescription(p.localId, "dosage", e.target.value)
-                        }
-                      />
-                      <Input
-                        label="Frequency"
-                        type="text"
-                        required
-                        placeholder="twice daily"
-                        value={p.frequency}
-                        onChange={(e) =>
-                          updatePrescription(p.localId, "frequency", e.target.value)
-                        }
-                      />
-                      <Input
-                        label="Duration"
-                        type="text"
-                        required
-                        placeholder="5 days"
-                        value={p.duration}
-                        onChange={(e) =>
-                          updatePrescription(p.localId, "duration", e.target.value)
-                        }
-                      />
-                    </div>
-
-                    <Input
-                      label="Instructions"
-                      type="text"
-                      value={p.instructions}
-                      onChange={(e) =>
-                        updatePrescription(p.localId, "instructions", e.target.value)
-                      }
-                    />
-                  </div>
-                </div>
+                  patientId={patientId}
+                  index={i}
+                  value={p}
+                  onChange={(field, value) => updatePrescription(p.localId, field, value)}
+                  onRemove={() => removePrescription(p.localId)}
+                  onStatusChange={handleStatusChange}
+                />
               ))}
 
               <button
@@ -408,7 +596,12 @@ export default function NewVisitPage() {
             >
               Cancel
             </Link>
-            <Button type="submit" loading={loading} className="w-full sm:w-auto">
+            <Button
+              type="submit"
+              loading={loading}
+              disabled={hasUnacknowledged}
+              className="w-full sm:w-auto"
+            >
               {loading ? "Saving…" : "Save Visit"}
             </Button>
           </div>

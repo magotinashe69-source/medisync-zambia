@@ -184,3 +184,27 @@ class AuditLog(Base):
 
     user = relationship("User")
     patient = relationship("Patient")
+
+
+class DrugInteractionRule(Base):
+    __tablename__ = "drug_interaction_rules"
+
+    id = Column(String(36), primary_key=True, default=gen_uuid)
+    # Normalized lowercase name of the drug BEING PRESCRIBED.
+    drug_name = Column(String(255), nullable=False, index=True)
+    # Exactly one of the three "interacts_with_*" columns is set per rule.
+    interacts_with_drug = Column(String(255), nullable=True)       # drug–drug
+    interacts_with_condition = Column(String(255), nullable=True)  # drug–condition
+    interacts_with_allergy = Column(String(255), nullable=True)    # drug–allergy
+    severity = Column(String(20), nullable=False)                  # minor | moderate | severe
+    warning_message = Column(Text, nullable=False)
+    clinical_action = Column(Text, nullable=False)
+    source_reference = Column(String(255), nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )

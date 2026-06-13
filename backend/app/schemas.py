@@ -226,3 +226,19 @@ class EmergencyAccessLogResponse(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# ----- Drug interaction checking -----
+
+class InteractionCheckRequest(BaseModel):
+    patient_id: str
+    proposed_medication: str
+
+
+class InteractionWarning(BaseModel):
+    severity: str  # severe | moderate | minor
+    drug_name: str
+    conflicting_with: str | None = None
+    warning_message: str
+    clinical_action: str
+    source_reference: str | None = None
