@@ -1,7 +1,7 @@
-# MediSync Zambia — Phase 1
+# MediSync Africa — Phase 1
 
 ## What this is
-A simple webapp for Zambian clinics. Doctors register patients,
+A simple webapp for clinics across Africa, starting with Zambia. Doctors register patients,
 record visits with vitals and diagnosis, and write prescriptions.
 Online only. No offline yet.
 

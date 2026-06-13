@@ -15,7 +15,7 @@ FRONTEND_URLS = [
 ]
 
 app = FastAPI(
-    title="MediSync Zambia API",
+    title="MediSync Africa API",
     description="Phase 1 — patient records, visits, prescriptions",
     version="0.1.0",
 )
@@ -37,9 +37,9 @@ app.include_router(interactions.router)
 
 @app.get("/")
 def root():
-    return {"message": "MediSync Zambia API — go to /docs for API documentation"}
+    return {"message": "MediSync Africa API — go to /docs for API documentation"}
 
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "MediSync Zambia API"}
+    return {"status": "ok", "service": "MediSync Africa API"}

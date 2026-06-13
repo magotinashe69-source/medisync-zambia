@@ -53,10 +53,10 @@ export default function LoginPage() {
             M
           </div>
           <h1 className="font-heading text-2xl font-bold text-slate-900 sm:text-3xl">
-            MediSync <span className="text-primary-600">Zambia</span>
+            MediSync <span className="text-primary-600">Africa</span>
           </h1>
           <p className="mt-1.5 text-sm text-slate-500">
-            Simple, secure patient records for Zambian clinics
+            Healthcare infrastructure for Africa
           </p>
         </div>
 

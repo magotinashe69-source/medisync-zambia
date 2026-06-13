@@ -25,7 +25,7 @@ export default function Header({ userName, facilityName }: HeaderProps) {
             M
           </span>
           <span className="font-heading text-base font-bold text-slate-900 sm:text-lg">
-            MediSync <span className="text-primary-600">Zambia</span>
+            MediSync <span className="text-primary-600">Africa</span>
           </span>
         </Link>
 

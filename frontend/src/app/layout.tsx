@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "MediSync Zambia",
-  description: "Patient records for Zambian clinics",
+  title: "MediSync Africa",
+  description: "Healthcare infrastructure for Africa",
 };
 
 export default function RootLayout({

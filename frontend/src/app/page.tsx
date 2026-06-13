@@ -20,7 +20,7 @@ export default function HomePage() {
           M
         </span>
         <span className="font-heading text-xl font-bold text-slate-900">
-          MediSync <span className="text-primary-600">Zambia</span>
+          MediSync <span className="text-primary-600">Africa</span>
         </span>
       </div>
       <Spinner className="text-primary-600" />
