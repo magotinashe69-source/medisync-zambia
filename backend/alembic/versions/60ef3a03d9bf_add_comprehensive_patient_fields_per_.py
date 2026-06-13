@@ -43,7 +43,7 @@ def upgrade() -> None:
         batch_op.add_column(sa.Column('marital_status', sa.String(length=50), nullable=True))
         batch_op.add_column(sa.Column('occupation', sa.String(length=255), nullable=True))
         batch_op.add_column(sa.Column('preferred_language', sa.String(length=20), server_default='en', nullable=False))
-        batch_op.add_column(sa.Column('has_insurance', sa.Boolean(), server_default=sa.text('0'), nullable=False))
+        batch_op.add_column(sa.Column('has_insurance', sa.Boolean(), server_default=sa.false(), nullable=False))
         batch_op.add_column(sa.Column('insurance_provider', sa.String(length=255), nullable=True))
         batch_op.add_column(sa.Column('insurance_member_number', sa.String(length=100), nullable=True))
         batch_op.add_column(sa.Column('insurance_plan_type', sa.String(length=100), nullable=True))
