@@ -162,3 +162,25 @@ class Prescription(Base):
     )
 
     visit = relationship("Visit", back_populates="prescriptions")
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(String(36), primary_key=True, default=gen_uuid)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    patient_id = Column(String(36), ForeignKey("patients.id"), nullable=True)
+    action = Column(String(50), nullable=False)
+    identifier_used = Column(String(100), nullable=True)
+    reason = Column(Text, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    user = relationship("User")
+    patient = relationship("Patient")

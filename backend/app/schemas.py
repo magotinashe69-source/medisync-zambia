@@ -182,3 +182,47 @@ class VisitResponse(VisitBase):
     prescriptions: list[PrescriptionResponse] = []
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# ----- Emergency lookup -----
+
+class PastSurgeryEmergency(BaseModel):
+    """Minimal surgery info for the emergency card — anaesthetic history is critical."""
+    surgery_date: date
+    procedure_name: str
+    anaesthetic_used: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class EmergencyCardResponse(BaseModel):
+    patient_name: str
+    patient_id: str
+    nrc: str
+    age: int
+    sex: str
+    blood_group: str | None = None
+    critical_allergies: list[str] = []
+    current_medications: str | None = None
+    chronic_conditions: str | None = None
+    past_surgeries: list[PastSurgeryEmergency] = []
+    emergency_contact_primary: str | None = None
+    emergency_contact_secondary: str | None = None
+    facility_of_origin: str | None = None
+
+
+class EmergencyAccessLogCreate(BaseModel):
+    nrc_or_id: str
+    reason: str
+
+
+class EmergencyAccessLogResponse(BaseModel):
+    id: str
+    user_id: str
+    patient_id: str | None = None
+    action: str
+    identifier_used: str | None = None
+    reason: str | None = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
