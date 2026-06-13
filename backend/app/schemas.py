@@ -6,20 +6,23 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 # ----- Country -----
 
-class CountryResponse(BaseModel):
-    id: str
+class CountryBase(BaseModel):
     code: str
     name: str
     currency_code: str
     phone_country_code: str
-    default_language: str
+    default_language: str = "en"
     national_id_label: str
     national_id_format_regex: str
     national_id_hint: str | None = None
     phone_format_regex: str
     phone_hint: str | None = None
     medical_council_name: str | None = None
-    is_active: bool
+    is_active: bool = True
+
+
+class CountryResponse(CountryBase):
+    id: str
 
     model_config = ConfigDict(from_attributes=True)
 
