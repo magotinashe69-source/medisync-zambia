@@ -21,6 +21,7 @@ type Patient = {
   date_of_birth: string;
   gender: string;
   allergies: string | null;
+  country: { code: string; name: string; national_id_label: string } | null;
   // Personal
   next_of_kin_name: string | null;
   next_of_kin_relationship: string | null;
@@ -363,7 +364,7 @@ export default function PatientDetailPage() {
                   </div>
 
                   <dl className="divide-y divide-slate-100">
-                    <InfoRow label="NRC" value={patient.nrc} />
+                    <InfoRow label={patient.country?.national_id_label ?? "NRC"} value={patient.nrc} />
                     <InfoRow label="Phone" value={patient.phone} />
                     <InfoRow label="Date of birth" value={formatNiceDate(patient.date_of_birth)} />
                     <InfoRow label="Gender" value={patient.gender} />
@@ -388,6 +389,7 @@ export default function PatientDetailPage() {
                 <InfoCard
                   title="Personal Details"
                   hasContent={
+                    hasText(patient.country?.name) ||
                     hasText(patient.marital_status) ||
                     hasText(patient.occupation) ||
                     hasText(patient.preferred_language) ||
@@ -396,6 +398,7 @@ export default function PatientDetailPage() {
                   }
                 >
                   <dl className="divide-y divide-slate-100">
+                    <InfoRow label="Country" value={patient.country?.name} />
                     <InfoRow label="Marital status" value={patient.marital_status} />
                     <InfoRow label="Occupation" value={patient.occupation} />
                     <InfoRow

@@ -2,13 +2,20 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
-import { apiPost } from "@/lib/api";
+import { apiGet, apiPost } from "@/lib/api";
+
+type Country = {
+  id: string;
+  code: string;
+  name: string;
+  medical_council_name: string | null;
+};
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -18,8 +25,23 @@ export default function RegisterPage() {
   const [role, setRole] = useState("doctor");
   const [hpczNumber, setHpczNumber] = useState("");
   const [facilityName, setFacilityName] = useState("");
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [countryId, setCountryId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    apiGet<Country[]>("/countries")
+      .then((cs) => {
+        setCountries(cs);
+        const zm = cs.find((c) => c.code === "ZM") ?? cs[0];
+        if (zm) setCountryId(zm.id);
+      })
+      .catch(() => {});
+  }, []);
+
+  const councilLabel =
+    countries.find((c) => c.id === countryId)?.medical_council_name ?? "Council";
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -33,6 +55,7 @@ export default function RegisterPage() {
         role,
         hpcz_number: hpczNumber.trim() || null,
         facility_name: facilityName,
+        country_id: countryId || null,
       });
       router.push("/login");
     } catch (err) {
@@ -64,6 +87,24 @@ export default function RegisterPage() {
           </p>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <Select
+              label="Country"
+              id="country"
+              required
+              hint="Where you practise"
+              value={countryId}
+              onChange={(e) => setCountryId(e.target.value)}
+            >
+              <option value="" disabled>
+                Select country
+              </option>
+              {countries.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </Select>
+
             <Input
               label="Full name"
               id="fullName"
@@ -113,7 +154,7 @@ export default function RegisterPage() {
               </Select>
 
               <Input
-                label="HPCZ number"
+                label={`${councilLabel} number`}
                 id="hpczNumber"
                 type="text"
                 hint="Optional — leave blank if not registered"

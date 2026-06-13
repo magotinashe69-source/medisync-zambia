@@ -4,6 +4,26 @@ from datetime import date, datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
+# ----- Country -----
+
+class CountryResponse(BaseModel):
+    id: str
+    code: str
+    name: str
+    currency_code: str
+    phone_country_code: str
+    default_language: str
+    national_id_label: str
+    national_id_format_regex: str
+    national_id_hint: str | None = None
+    phone_format_regex: str
+    phone_hint: str | None = None
+    medical_council_name: str | None = None
+    is_active: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 # ----- User -----
 
 class UserBase(BaseModel):
@@ -12,6 +32,7 @@ class UserBase(BaseModel):
     role: str
     hpcz_number: str | None = None
     facility_name: str
+    country_id: str | None = None
 
 
 class UserCreate(UserBase):
@@ -26,6 +47,7 @@ class UserLogin(BaseModel):
 class UserResponse(UserBase):
     id: str
     created_at: datetime
+    country: CountryResponse | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -50,6 +72,7 @@ class PatientBase(BaseModel):
     date_of_birth: date
     gender: str
     allergies: str | None = None
+    country_id: str | None = None
 
     # ----- Personal details -----
     next_of_kin_name: str | None = None
@@ -81,28 +104,9 @@ class PatientBase(BaseModel):
 
 
 class PatientCreate(PatientBase):
-    @field_validator("nrc")
-    @classmethod
-    def validate_nrc(cls, v: str) -> str:
-        if not NRC_PATTERN.match(v):
-            raise ValueError("NRC must be in format ######/##/# (e.g. 123456/78/1)")
-        return v
-
-    @field_validator("phone")
-    @classmethod
-    def validate_phone(cls, v: str) -> str:
-        if not PHONE_PATTERN.match(v):
-            raise ValueError("Phone must start with +260 or 0 followed by 9 digits")
-        return v
-
-    @field_validator("next_of_kin_phone")
-    @classmethod
-    def validate_next_of_kin_phone(cls, v: str | None) -> str | None:
-        if v is None or v == "":
-            return None
-        if not PHONE_PATTERN.match(v):
-            raise ValueError("Phone must start with +260 or 0 followed by 9 digits")
-        return v
+    # National ID and phone are validated per-country in the route handler,
+    # because the required format depends on the patient's country.
+    pass
 
 
 class PatientResponse(PatientBase):
@@ -110,6 +114,7 @@ class PatientResponse(PatientBase):
     created_by: str
     created_at: datetime
     updated_at: datetime
+    country: CountryResponse | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

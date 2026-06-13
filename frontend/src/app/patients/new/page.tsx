@@ -10,11 +10,22 @@ import Header from "@/components/ui/Header";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Textarea from "@/components/ui/Textarea";
-import { apiPost } from "@/lib/api";
+import { apiGet, apiPost } from "@/lib/api";
 import { clearToken, isLoggedIn } from "@/lib/auth";
 
 type CreatedPatient = {
   id: string;
+};
+
+type Country = {
+  id: string;
+  code: string;
+  name: string;
+  national_id_label: string;
+  national_id_format_regex: string;
+  national_id_hint: string | null;
+  phone_format_regex: string;
+  phone_hint: string | null;
 };
 
 const AUTH_ERROR_MESSAGES = new Set([
@@ -24,6 +35,7 @@ const AUTH_ERROR_MESSAGES = new Set([
 
 type FormState = {
   // Personal
+  country_id: string;
   full_name: string;
   nrc: string;
   phone: string;
@@ -57,6 +69,7 @@ type FormState = {
 };
 
 const INITIAL: FormState = {
+  country_id: "",
   full_name: "",
   nrc: "",
   phone: "",
@@ -97,14 +110,27 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }
 export default function NewPatientPage() {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(INITIAL);
+  const [countries, setCountries] = useState<Country[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn()) {
       router.replace("/login");
+      return;
     }
+    apiGet<Country[]>("/countries").then(setCountries).catch(() => {});
+    // Default the country to the logged-in doctor's country.
+    apiGet<{ country_id: string | null }>("/auth/me")
+      .then((me) => {
+        if (me.country_id) {
+          setForm((prev) => ({ ...prev, country_id: me.country_id as string }));
+        }
+      })
+      .catch(() => {});
   }, [router]);
+
+  const selectedCountry = countries.find((c) => c.id === form.country_id);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -118,6 +144,21 @@ export default function NewPatientPage() {
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+
+    // Country-aware client-side validation (server re-validates authoritatively).
+    if (selectedCountry) {
+      if (!new RegExp(selectedCountry.national_id_format_regex).test(form.nrc)) {
+        setError(
+          `${selectedCountry.national_id_label} format is invalid. ${selectedCountry.national_id_hint ?? ""}`.trim(),
+        );
+        return;
+      }
+      if (!new RegExp(selectedCountry.phone_format_regex).test(form.phone)) {
+        setError(`Phone format is invalid. ${selectedCountry.phone_hint ?? ""}`.trim());
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const patient = await apiPost<CreatedPatient>("/patients", {
@@ -126,6 +167,7 @@ export default function NewPatientPage() {
         phone: form.phone,
         date_of_birth: form.date_of_birth,
         gender: form.gender,
+        country_id: form.country_id || null,
         allergies: orNull(form.allergies),
         // Personal
         next_of_kin_name: orNull(form.next_of_kin_name),
@@ -203,6 +245,24 @@ export default function NewPatientPage() {
           <Card>
             <SectionHeader title="Personal Information" />
             <div className="mt-4 space-y-5">
+              <Select
+                label="Country"
+                id="country"
+                required
+                hint="Country where the patient is registered"
+                value={form.country_id}
+                onChange={(e) => set("country_id", e.target.value)}
+              >
+                <option value="" disabled>
+                  Select country
+                </option>
+                {countries.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </Select>
+
               <Input
                 label="Full name"
                 id="fullName"
@@ -214,11 +274,11 @@ export default function NewPatientPage() {
 
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <Input
-                  label="NRC"
+                  label={selectedCountry?.national_id_label ?? "NRC"}
                   id="nrc"
                   type="text"
                   required
-                  hint="Format: 123456/78/1"
+                  hint={selectedCountry?.national_id_hint ?? "Format: 123456/78/1"}
                   value={form.nrc}
                   onChange={(e) => set("nrc", e.target.value)}
                 />
@@ -227,7 +287,7 @@ export default function NewPatientPage() {
                   id="phone"
                   type="text"
                   required
-                  hint="Format: +260977123456 or 0977123456"
+                  hint={selectedCountry?.phone_hint ?? "Format: +260977123456 or 0977123456"}
                   value={form.phone}
                   onChange={(e) => set("phone", e.target.value)}
                 />

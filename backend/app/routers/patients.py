@@ -1,12 +1,57 @@
+import re
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from .. import auth, schemas
 from ..database import get_db
-from ..models import PastSurgery, Patient, User
+from ..models import Country, PastSurgery, Patient, User
 
 router = APIRouter(prefix="/patients", tags=["patients"])
+
+
+def _resolve_country_and_validate(
+    db: Session, payload: schemas.PatientCreate, current_user: User
+) -> Country | None:
+    """Resolve the patient's country (payload -> doctor -> Zambia) and validate
+    the national ID / phone fields against that country's formats."""
+    country: Country | None = None
+    if payload.country_id:
+        country = db.query(Country).filter(Country.id == payload.country_id).first()
+        if country is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Unknown country selected",
+            )
+    if country is None and current_user.country_id:
+        country = db.query(Country).filter(Country.id == current_user.country_id).first()
+    if country is None:
+        country = db.query(Country).filter(Country.code == "ZM").first()
+
+    if country is None:
+        return None  # no countries seeded — skip validation rather than 500
+
+    if not re.match(country.national_id_format_regex, payload.nrc or ""):
+        hint = f" {country.national_id_hint}" if country.national_id_hint else ""
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"{country.national_id_label} format is invalid.{hint}",
+        )
+    if not re.match(country.phone_format_regex, payload.phone or ""):
+        hint = f" {country.phone_hint}" if country.phone_hint else ""
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Phone format is invalid.{hint}",
+        )
+    nok = (payload.next_of_kin_phone or "").strip()
+    if nok and not re.match(country.phone_format_regex, nok):
+        hint = f" {country.phone_hint}" if country.phone_hint else ""
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Next of kin phone format is invalid.{hint}",
+        )
+    return country
 
 
 @router.post(
@@ -26,7 +71,10 @@ def create_patient(
             detail="NRC already registered",
         )
 
-    patient = Patient(**payload.model_dump(), created_by=current_user.id)
+    country = _resolve_country_and_validate(db, payload, current_user)
+    data = payload.model_dump()
+    data["country_id"] = country.id if country else data.get("country_id")
+    patient = Patient(**data, created_by=current_user.id)
     db.add(patient)
     db.commit()
     db.refresh(patient)
@@ -77,7 +125,10 @@ def update_patient(
             detail="Patient not found",
         )
 
-    for field, value in payload.model_dump().items():
+    country = _resolve_country_and_validate(db, payload, current_user)
+    data = payload.model_dump()
+    data["country_id"] = country.id if country else data.get("country_id")
+    for field, value in data.items():
         setattr(patient, field, value)
 
     db.commit()

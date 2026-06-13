@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from .. import auth, schemas
 from ..database import get_db
-from ..models import User
+from ..models import Country, User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -21,6 +21,12 @@ def register(payload: schemas.UserCreate, db: Session = Depends(get_db)) -> User
             detail="Email already registered",
         )
 
+    # Default to Zambia when no country is supplied (keeps older clients working).
+    country_id = payload.country_id
+    if not country_id:
+        zambia = db.query(Country).filter(Country.code == "ZM").first()
+        country_id = zambia.id if zambia else None
+
     user = User(
         email=payload.email,
         password_hash=auth.hash_password(payload.password),
@@ -28,6 +34,7 @@ def register(payload: schemas.UserCreate, db: Session = Depends(get_db)) -> User
         role=payload.role,
         hpcz_number=payload.hpcz_number,
         facility_name=payload.facility_name,
+        country_id=country_id,
     )
     db.add(user)
     db.commit()
