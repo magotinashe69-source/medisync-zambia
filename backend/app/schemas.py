@@ -236,6 +236,49 @@ class EmergencyAccessLogResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+# ----- Emergency lookup (Stage 2.1) -----
+
+class EmergencySurgeryItem(BaseModel):
+    surgery_date: date
+    procedure_name: str
+    facility_where_done: str
+    anaesthetic_used: str | None = None
+    complications: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class EmergencyCard(BaseModel):
+    # Identity
+    patient_id: str
+    nrc: str
+    full_name: str
+    age: int
+    gender: str
+    # CRITICAL
+    blood_group: str | None = None
+    emergency_critical_allergies: str | None = None
+    known_allergies: str | None = None
+    # Anticoagulation (computed)
+    is_anticoagulated: bool = False
+    anticoagulation_details: str | None = None
+    # Current state
+    current_medications: str | None = None
+    chronic_conditions: str | None = None
+    # Recent surgical history
+    recent_surgeries: list[EmergencySurgeryItem] = []
+    # Emergency contacts
+    emergency_contact_primary: str | None = None
+    emergency_contact_secondary: str | None = None
+    next_of_kin_name: str | None = None
+    next_of_kin_phone: str | None = None
+    # Metadata
+    last_visit_date: date | None = None
+    facility_of_origin: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 # ----- Drug interaction checking -----
 
 class InteractionCheckRequest(BaseModel):

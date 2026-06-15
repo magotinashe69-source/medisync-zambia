@@ -4,7 +4,15 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import countries, emergency, interactions, patients, users, visits
+from .routers import (
+    countries,
+    emergency,
+    emergency_lookup,
+    interactions,
+    patients,
+    users,
+    visits,
+)
 
 load_dotenv()
 
@@ -32,6 +40,7 @@ app.include_router(users.router)
 app.include_router(patients.router)
 app.include_router(visits.router)
 app.include_router(emergency.router)
+app.include_router(emergency_lookup.router)
 app.include_router(interactions.router)
 app.include_router(countries.router)
 
