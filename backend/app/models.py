@@ -178,6 +178,14 @@ class AuditLog(Base):
     identifier_used = Column(String(100), nullable=True)
     reason = Column(Text, nullable=True)
 
+    # ----- Added in Stage 2.2 (outcome + request context) -----
+    success = Column(
+        Boolean, nullable=False, server_default=expression.true(), default=True
+    )
+    error_message = Column(Text, nullable=True)
+    ip_address = Column(String(45), nullable=True)   # IPv6 max length
+    user_agent = Column(String(500), nullable=True)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(
         DateTime(timezone=True),

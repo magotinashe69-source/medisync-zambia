@@ -1,11 +1,11 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
 from .. import auth, schemas
 from ..database import get_db
-from ..models import PastSurgery, Patient, User, Visit
+from ..models import AuditLog, PastSurgery, Patient, User, Visit
 
 router = APIRouter(prefix="/emergency", tags=["emergency"])
 
@@ -36,9 +36,42 @@ def _detect_anticoagulation(meds: str | None) -> tuple[bool, str | None]:
     return True, "\n".join(matched)
 
 
+def _record_access(
+    db: Session,
+    *,
+    user: User,
+    patient_id: str | None,
+    identifier_used: str,
+    reason: str | None,
+    request: Request,
+    success: bool,
+    error_message: str | None = None,
+) -> None:
+    """Persist an audit trail entry for an emergency lookup attempt.
+
+    Every access — successful or not — is recorded, together with its outcome
+    and the request context (caller IP and user agent). Added in Stage 2.2."""
+    db.add(
+        AuditLog(
+            user_id=user.id,
+            patient_id=patient_id,
+            action="emergency_access",
+            identifier_used=identifier_used,
+            reason=reason,
+            success=success,
+            error_message=error_message,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+        )
+    )
+    db.commit()
+
+
 @router.get("/lookup/{nrc_or_id:path}", response_model=schemas.EmergencyCard)
 def emergency_lookup(
     nrc_or_id: str,
+    request: Request,
+    reason: str | None = Query(None, description="Reason for emergency access"),
     db: Session = Depends(get_db),
     current_user: User = Depends(auth.get_current_user),
 ) -> schemas.EmergencyCard:
@@ -47,6 +80,17 @@ def emergency_lookup(
     if patient is None:
         patient = db.query(Patient).filter(Patient.id == nrc_or_id).first()
     if patient is None:
+        # Step 5a: audit the failed access before bailing out.
+        _record_access(
+            db,
+            user=current_user,
+            patient_id=None,
+            identifier_used=nrc_or_id,
+            reason=reason,
+            request=request,
+            success=False,
+            error_message="Patient not found",
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Patient not found"
         )
@@ -83,7 +127,17 @@ def emergency_lookup(
     last_visit_date = last_visit.created_at.date() if last_visit else None
     facility_of_origin = patient.creator.facility_name if patient.creator else None
 
-    # Step 5: audit logging deferred to step 2.2 (per spec).
+    # Step 5b: audit the successful access (Stage 2.2).
+    _record_access(
+        db,
+        user=current_user,
+        patient_id=patient.id,
+        identifier_used=nrc_or_id,
+        reason=reason,
+        request=request,
+        success=True,
+    )
+
     # Step 6: return.
     return schemas.EmergencyCard(
         patient_id=patient.id,
