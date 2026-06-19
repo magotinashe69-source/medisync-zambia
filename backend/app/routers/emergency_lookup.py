@@ -36,6 +36,21 @@ def _detect_anticoagulation(meds: str | None) -> tuple[bool, str | None]:
     return True, "\n".join(matched)
 
 
+def _client_ip(request: Request) -> str | None:
+    """Resolve the originating client IP.
+
+    Behind a proxy (e.g. Railway) the direct connection is the proxy itself, so
+    prefer the first entry of X-Forwarded-For — the original caller — and fall
+    back to the direct connection when the header is absent."""
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        # Header is a comma-separated chain: client, proxy1, proxy2, ...
+        first = forwarded.split(",")[0].strip()
+        if first:
+            return first[:45]  # guard against header bloat; column is varchar(45)
+    return request.client.host if request.client else None
+
+
 def _record_access(
     db: Session,
     *,
@@ -60,7 +75,7 @@ def _record_access(
             reason=reason,
             success=success,
             error_message=error_message,
-            ip_address=request.client.host if request.client else None,
+            ip_address=_client_ip(request),
             user_agent=request.headers.get("user-agent"),
         )
     )
