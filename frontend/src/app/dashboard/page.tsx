@@ -133,6 +133,17 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Featured: Smart Clinical Views hub */}
+        <Link href="/clinical-views" className="block mb-8">
+          <div className="bg-brand-700 text-white p-6 rounded-2xl flex items-center justify-between hover:bg-brand-800 transition-colors cursor-pointer">
+            <div>
+              <h2 className="text-2xl font-heading font-bold">Smart Clinical Views</h2>
+              <p className="text-brand-100 mt-1">Quick patient lookup by clinical context</p>
+            </div>
+            <div className="text-3xl">→</div>
+          </div>
+        </Link>
+
         {loadError && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {loadError}
