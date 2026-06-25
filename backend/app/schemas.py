@@ -1,5 +1,6 @@
 import re
 from datetime import date, datetime
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
@@ -293,3 +294,68 @@ class InteractionWarning(BaseModel):
     warning_message: str
     clinical_action: str
     source_reference: str | None = None
+
+
+# ----- Smart Clinical Views — Surgery View (Step 1.3A) -----
+
+class CriticalAlert(BaseModel):
+    type: str  # 'allergy' | 'anticoagulation' | 'contraindication' | 'other'
+    severity: str  # 'critical' | 'high' | 'moderate'
+    title: str
+    detail: str
+    action: Optional[str] = None
+
+
+class PreviousAnaesthetic(BaseModel):
+    surgery_id: str
+    surgery_date: date
+    procedure_name: str
+    facility: str
+    anaesthetic_used: Optional[str] = None
+    complications: Optional[str] = None
+    has_complications: bool = False
+    surgeon_name: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CurrentMedication(BaseModel):
+    name: str  # Full medication line as stored
+    is_anticoagulant: bool = False
+    is_high_risk: bool = False
+
+
+class EmergencyContactInfo(BaseModel):
+    name: Optional[str] = None
+    relationship: Optional[str] = None
+    phone: Optional[str] = None
+
+
+class ClinicalViewMetadata(BaseModel):
+    accessed_by: str  # Doctor's full name or email
+    accessed_at: datetime
+    reason: str
+    view_type: str  # 'surgery' for now
+
+
+class ClinicalViewPatient(BaseModel):
+    id: str
+    nrc: str
+    full_name: str
+    age: int  # Calculated from date_of_birth
+    gender: str
+    blood_group: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SurgeryViewResponse(BaseModel):
+    patient: ClinicalViewPatient
+    critical_alerts: List[CriticalAlert] = []
+    previous_anaesthetics: List[PreviousAnaesthetic] = []
+    current_medications: List[CurrentMedication] = []
+    comorbidities: List[str] = []
+    emergency_contact: Optional[EmergencyContactInfo] = None
+    metadata: ClinicalViewMetadata
+
+    model_config = ConfigDict(from_attributes=True)

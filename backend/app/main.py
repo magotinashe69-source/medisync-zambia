@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .routers import (
+    clinical_views,
     countries,
     emergency,
     emergency_lookup,
@@ -41,6 +42,7 @@ app.include_router(patients.router)
 app.include_router(visits.router)
 app.include_router(emergency.router)
 app.include_router(emergency_lookup.router)
+app.include_router(clinical_views.router)
 app.include_router(interactions.router)
 app.include_router(countries.router)
 
