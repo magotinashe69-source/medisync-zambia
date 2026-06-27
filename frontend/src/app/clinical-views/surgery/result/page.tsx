@@ -1,6 +1,13 @@
 "use client";
 
-import { ArrowLeft, Scissors } from "lucide-react";
+import {
+  Activity,
+  ArrowLeft,
+  Phone,
+  Pill,
+  Scissors,
+  Syringe,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -15,6 +22,7 @@ import Badge from "@/components/ui/Badge";
 import Header from "@/components/ui/Header";
 import { apiGet } from "@/lib/api";
 import { clearToken, isLoggedIn } from "@/lib/auth";
+import { cn } from "@/lib/cn";
 
 interface SurgeryViewData {
   patient: {
@@ -74,6 +82,54 @@ function formatDate(iso: string): string {
     month: "short",
     year: "numeric",
   });
+}
+
+/** Backend sends naive UTC (no tz designator) — treat as UTC, show date + time. */
+function formatAccessedAt(iso: string): string {
+  const hasTz = /[zZ]|[+-]\d{2}:?\d{2}$/.test(iso);
+  const d = new Date(hasTz ? iso : `${iso}Z`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/** Small quick-fact pill for the patient summary band. */
+function Fact({
+  label,
+  value,
+  emphasize = false,
+}: {
+  label: string;
+  value: string;
+  emphasize?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-lg border px-3 py-2 text-center",
+        emphasize
+          ? "border-brand-200 bg-brand-50"
+          : "border-gray-200 bg-gray-50",
+      )}
+    >
+      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+        {label}
+      </p>
+      <p
+        className={cn(
+          "font-heading text-base font-bold",
+          emphasize ? "text-brand-800" : "text-gray-900",
+        )}
+      >
+        {value}
+      </p>
+    </div>
+  );
 }
 
 export default function SurgeryResultPage() {
@@ -140,36 +196,52 @@ export default function SurgeryResultPage() {
         </Link>
 
         {/* Page header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="mb-2 flex items-center gap-3">
             <Scissors className="h-8 w-8 text-brand-700" />
             <h1 className="font-heading text-3xl font-bold text-gray-900">
               Surgery Preparation
             </h1>
           </div>
-          <p className="text-gray-600">
-            Pre-operative clinical review · {data.patient.full_name}
-          </p>
+          <p className="text-gray-600">Pre-operative clinical review</p>
         </div>
 
-        {/* Critical alerts (renders nothing when empty) */}
-        <CriticalAlertBanner alerts={alerts} />
+        {/* Patient summary band */}
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 className="font-heading text-2xl font-bold text-gray-900">
+                {data.patient.full_name}
+              </h2>
+              <p className="mt-1 font-mono text-sm text-gray-600">
+                NRC {data.patient.nrc}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Fact label="Age" value={`${data.patient.age} yrs`} />
+              <Fact label="Sex" value={data.patient.gender} />
+              <Fact
+                label="Blood"
+                value={data.patient.blood_group ?? "—"}
+                emphasize
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Critical alerts */}
+        {alerts.length > 0 && (
+          <div className="mt-6">
+            <CriticalAlertBanner alerts={alerts} />
+          </div>
+        )}
 
         <div className="mt-6 space-y-6">
-          {/* Patient identity */}
-          <SectionCard title="Patient Identity">
-            <InfoRow label="Full Name" value={data.patient.full_name} />
-            <InfoRow label="NRC" value={data.patient.nrc} variant="mono" />
-            <InfoRow label="Age" value={`${data.patient.age} years`} />
-            <InfoRow label="Gender" value={data.patient.gender} />
-            <InfoRow
-              label="Blood Group"
-              value={data.patient.blood_group ?? "—"}
-            />
-          </SectionCard>
-
           {/* Previous anaesthetics */}
-          <SectionCard title="Previous Anaesthetics">
+          <SectionCard
+            title="Previous Anaesthetics"
+            icon={<Syringe className="h-5 w-5" />}
+          >
             {data.previous_anaesthetics.length === 0 ? (
               <p className="text-sm text-gray-500">
                 No previous anaesthetic records.
@@ -211,7 +283,10 @@ export default function SurgeryResultPage() {
           </SectionCard>
 
           {/* Current medications */}
-          <SectionCard title="Current Medications">
+          <SectionCard
+            title="Current Medications"
+            icon={<Pill className="h-5 w-5" />}
+          >
             {data.current_medications.length === 0 ? (
               <p className="text-sm text-gray-500">
                 No current medications recorded.
@@ -240,7 +315,10 @@ export default function SurgeryResultPage() {
           </SectionCard>
 
           {/* Comorbidities */}
-          <SectionCard title="Comorbidities">
+          <SectionCard
+            title="Comorbidities"
+            icon={<Activity className="h-5 w-5" />}
+          >
             {data.comorbidities.length === 0 ? (
               <p className="text-sm text-gray-500">None recorded.</p>
             ) : (
@@ -259,7 +337,10 @@ export default function SurgeryResultPage() {
 
           {/* Emergency contact */}
           {data.emergency_contact && (
-            <SectionCard title="Emergency Contact">
+            <SectionCard
+              title="Emergency Contact"
+              icon={<Phone className="h-5 w-5" />}
+            >
               <InfoRow
                 label="Name"
                 value={data.emergency_contact.name ?? "—"}
@@ -278,11 +359,8 @@ export default function SurgeryResultPage() {
 
         {/* Audit footer */}
         <div className="mt-8 border-t border-gray-200 pt-4 text-sm text-gray-500">
-          ✓ Accessed by {data.metadata.accessed_by} at{" "}
-          {new Date(data.metadata.accessed_at).toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
+          ✓ Accessed by {data.metadata.accessed_by} on{" "}
+          {formatAccessedAt(data.metadata.accessed_at)}
           {" · "}
           Reason: {data.metadata.reason}
         </div>
