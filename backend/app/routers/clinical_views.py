@@ -10,6 +10,7 @@ from datetime import date, datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from .. import auth, schemas
@@ -184,10 +185,53 @@ def surgery_view(
     db: Session = Depends(get_db),
     current_user: User = Depends(auth.get_current_user),
 ) -> schemas.SurgeryViewResponse:
-    # STEP 1: find the patient — NRC first, then UUID, else 404 (+ audit).
-    patient = db.query(Patient).filter(Patient.nrc == nrc_or_id).first()
+    # STEP 1: find the patient — tolerant NRC match, alt format, UUID, then
+    # unique name match; else 404 (+ audit).
+    cleaned_input = nrc_or_id.strip()
+
+    # NRC match, tolerant of stored leading/trailing whitespace.
+    patient = (
+        db.query(Patient)
+        .filter(func.trim(Patient.nrc) == cleaned_input)
+        .first()
+    )
+
+    # Retry with the dash/slash-swapped format.
     if patient is None:
-        patient = db.query(Patient).filter(Patient.id == nrc_or_id).first()
+        if "/" in cleaned_input:
+            alt_format = cleaned_input.replace("/", "-")
+        elif "-" in cleaned_input:
+            alt_format = cleaned_input.replace("-", "/")
+        else:
+            alt_format = cleaned_input
+        patient = (
+            db.query(Patient)
+            .filter(func.trim(Patient.nrc) == alt_format)
+            .first()
+        )
+
+    # Fall back to UUID.
+    if patient is None:
+        try:
+            patient = (
+                db.query(Patient).filter(Patient.id == cleaned_input).first()
+            )
+        except Exception:
+            pass
+
+    # Fall back to name search when the input contains letters — but only
+    # accept a UNIQUE match. Guessing the wrong patient on a surgery view is
+    # unsafe, so 2+ matches are treated as "not found" (ambiguous).
+    if patient is None and any(c.isalpha() for c in cleaned_input):
+        name_matches = (
+            db.query(Patient)
+            .filter(Patient.full_name.ilike(f"%{cleaned_input}%"))
+            .limit(2)
+            .all()
+        )
+        if len(name_matches) == 1:
+            patient = name_matches[0]
+
     if patient is None:
         _record_access(
             db,
